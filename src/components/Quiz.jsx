@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import QUESTIONS from "../questions";
 import TrophyImg from "../assets/quiz-complete.png";
+import QuestionTimer from "./QuestionTimer";
 
+const TIMER = 3000;
 export default function Quiz() {
   const [userAnswers, setUserAnswers] = useState([]);
 
@@ -12,6 +14,16 @@ export default function Quiz() {
   const handleSelectedAnswer = (selectedAnswer) => {
     setUserAnswers((prevAnswers) => [...prevAnswers, selectedAnswer]);
   };
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      handleSelectedAnswer(" ");
+    }, TIMER);
+
+    return () => {
+      clearTimeout(handler);
+    }
+  })
 
   if (quizIsComplete) {
     return (
@@ -44,6 +56,7 @@ export default function Quiz() {
           })}
         </ul>
       </div>
+      <QuestionTimer onTimerEnd = {handleSelectedAnswer} timer={TIMER} />
     </div>
   );
 }
