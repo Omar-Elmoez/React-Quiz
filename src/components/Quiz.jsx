@@ -5,17 +5,38 @@ import QuestionTimer from "./QuestionTimer";
 
 const TIMER = 3000;
 export default function Quiz() {
+  const [answerState, setAnswerState] = useState("");
   const [userAnswers, setUserAnswers] = useState([]);
 
-  const activeQuestionIndex = userAnswers.length;
+  const activeQuestionIndex =
+    answerState === "" ? userAnswers.length : userAnswers.length - 1;
 
   let quizIsComplete = activeQuestionIndex === QUESTIONS.length;
 
-  const handleSelectedAnswer = useCallback((selectedAnswer) => {
-    setUserAnswers((prevAnswers) => [...prevAnswers, selectedAnswer]);
-  }, []);
-  
-  const handleSkipAnswer = useCallback(() => handleSelectedAnswer(null), [handleSelectedAnswer])
+  const handleSelectedAnswer = useCallback(
+    (selectedAnswer) => {
+      setAnswerState("answered");
+      setUserAnswers((prevAnswers) => [...prevAnswers, selectedAnswer]);
+
+      setTimeout(() => {
+        if (selectedAnswer === QUESTIONS[activeQuestionIndex].answers[0]) {
+          setAnswerState("correct");
+        } else {
+          setAnswerState("wrong");
+        }
+
+        setTimeout(() => {
+          selectedAnswer("");
+        }, 2000);
+      }, 1000);
+    },
+    [activeQuestionIndex]
+  );
+
+  const handleSkipAnswer = useCallback(
+    () => handleSelectedAnswer(null),
+    [handleSelectedAnswer]
+  );
 
   if (quizIsComplete) {
     return (
@@ -33,16 +54,34 @@ export default function Quiz() {
   return (
     <div id="quiz">
       <div id="question">
-      {/* we set key property here to make QuestionTimer component re-created for each question */}
-      <QuestionTimer onTimerEnd = {handleSkipAnswer} timer={TIMER} key={activeQuestionIndex} />
+        {/* we set key property here to make QuestionTimer component re-created for each question */}
+        <QuestionTimer
+          onTimerEnd={handleSkipAnswer}
+          timer={TIMER}
+          key={activeQuestionIndex}
+        />
         <h2>{QUESTIONS[activeQuestionIndex].text}</h2>
         <ul id="answers">
           {shuffledAnswers.map((answer) => {
+            let cssClass = "";
+            const isSelected = userAnswers[userAnswers.length - 1] === answer ;
+
+            if (answerState === 'answered' && isSelected) {
+              cssClass = 'selected';
+            }
+
+            if ((answerState === 'correct' || answerState === 'wrong') && isSelected) {
+              cssClass = answerState;
+            }
+
             // if you use index as a key, click on answer for a question => the answer at the same index
             // for the next question will be marked as well.
             return (
               <li key={answer} className="answer">
-                <button onClick={() => handleSelectedAnswer(answer)}>
+                <button
+                  onClick={() => handleSelectedAnswer(answer)}
+                  className={cssClass}
+                >
                   {answer}
                 </button>
               </li>
